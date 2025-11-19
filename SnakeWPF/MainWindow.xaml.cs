@@ -16,6 +16,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using Common.Models;
+using System.Windows.Media.Animation;
 
 namespace SnakeWPF
 {
@@ -64,6 +65,36 @@ namespace SnakeWPF
             // Запускаем поток
             tRec.Start();
         }
+
+        /// <summaryу> Открываем страницу Home
+        public void OpenPage(Page PageOpen)
+        {
+            // Создаём анимацию
+            DoubleAnimation startAnimation = new DoubleAnimation();
+            // Задаём начальное значение анимации
+            startAnimation.From = 1;
+            // Задаём конечное значение анимации
+            startAnimation.To = 0;
+            // Задаём время анимации
+            startAnimation.Duration = TimeSpan.FromSeconds(0.6);
+            // Подписываемся на выполнение анимации
+            startAnimation.Completed += delegate
+            {
+                // Переключаем страницу
+                frame.Navigate(PageOpen);
+                // Создаём конечную анимацию
+                DoubleAnimation endAnimation = new DoubleAnimation();
+                // Задаём начальное значение анимации
+                endAnimation.From = 0;
+                // Задаём конечное значение анимации
+                endAnimation.To = 1;
+                // Задаём время анимации
+                endAnimation.Duration = TimeSpan.FromSeconds(0.6);
+                // Воспроизводим анимацию на framе, анимация прозрачности
+                frame.BeginAnimation(OpacityProperty, endAnimation);
+            };
+            // Воспроизводим анимацию на frameе, анимация прозрачности
+            frame.BeginAnimation (OpacityProperty, startAnimation);
+        }
     }
-}
 }
