@@ -207,8 +207,13 @@ namespace SnakeWPF
             }
         }
 
-
-
-
+        /// <summary> Выход из приложения
+        private void QuitApplication(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            // закрываем соединение
+            receivingUdpClient.Close();
+            // останавливаем поток
+            tRec.Abort();
+        }
     }
 }
