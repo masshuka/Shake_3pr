@@ -10,7 +10,7 @@
 
     <Grid>
         <Grid.Background>
-            <ImageBrush ImageSource="/Image/123.jpg" Stretch="UniformToFill"/>
+            <ImageBrush ImageSource="/Image/background_2.jpg" Stretch="UniformToFill"/>
         </Grid.Background>
         <Canvas x:Name="canvas">
         </Canvas>
