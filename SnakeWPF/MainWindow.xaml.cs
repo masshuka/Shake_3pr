@@ -153,7 +153,32 @@ namespace SnakeWPF
             }
         }
 
+        /// <summary> Отправляем команды
+        public static void Send(string datagram)
+        {
+            // Создаем UdpClient
+            UdpClient sender = new UdpClient();
+            // Создаем endPoint по информации об удаленном хосте
+            IPEndPoint endPoint = new IPEndPoint(remoteIPAddress, remotePort);
+            try
+            {
+                // Преобразуем данные в массив байтов
+                byte[] bytes = Encoding.UTF8.GetBytes(datagram);
 
+                // Отправляем данные
+                sender.Send(bytes, bytes.Length, endPoint);
+            }
+            catch (Exception ex)
+            {
+                // если что-то пошло не по плану, выводим ошибку в консоль проекта
+                Debug.WriteLine("Возникло исключение: " + ex.ToString() + "\n " + ex.Message);
+            }
+            finally
+            {
+                // Закрыть соединение
+                sender.Close();
+            }
+        }
 
 
 
