@@ -55,5 +55,15 @@ namespace SnakeWPF
         {
             InitializeComponent();
         }
+
+        /// <summary> Начинаем слушать ответы от сервера
+        public void StartReceiver()
+        {
+            // Создаём поток для прослушивания канала
+            tRec = new Thread(new ThreadStart(Receiver));
+            // Запускаем поток
+            tRec.Start();
+        }
     }
+}
 }
