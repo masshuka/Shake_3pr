@@ -146,7 +146,7 @@ namespace SnakeWPF
                     else
                     {
                         // Вызываем создание UI
-                        Game.CreatedUI();
+                        Game.CreateUI();
                     }
                 }
             }
