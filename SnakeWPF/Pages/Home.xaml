@@ -11,12 +11,12 @@
 
     <Grid>
         <Grid.Background>
-            <ImageBrush ImageSource="/SnakeMPF;component/Image/background.jpg"/>
+            <ImageBrush ImageSource="/Image/123.jpg"/>
         </Grid.Background>
 
-        <Grid Width="320" Height="200" HorizontalAlignment="Center" VerticalAlignment="Center">
+        <Grid Width="320" Height="210" HorizontalAlignment="Center" VerticalAlignment="Center">
             <Grid.Background>
-                <ImageBrush ImageSource="/SnakeMPF;component/Image/background_2.png"/>
+                <ImageBrush ImageSource="/Image/свиток.png"/>
             </Grid.Background>
 
             <Label
