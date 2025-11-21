@@ -99,13 +99,42 @@ namespace Snake
                     else
                     {
                         // Обработка команд управления
-                        string[] datamesage = returnData.ToString().Split(' ');
-                        ViewModelUserSettings viewModelUserSettings = JsonConvert.DeserializeObject<ViewModelUserSettings>(datamesage[1]);
-                        int IdPlayer = remoteIPAddress.FindIndex(x => x.IPAddress == viewModelUserSettings.IPAddress && x.Port == viewModelUserSettings.Port);
-
-                        if (IdPlayer != -1)
+                        string[] datamesage = returnData.ToString().Split('|');
+                        if (datamesage.Length >= 2)
                         {
-                            // Обработка направлений (код из предыдущих шагов)
+                            string command = datamesage[0];
+                            ViewModelUserSettings viewModelUserSettings = JsonConvert.DeserializeObject<ViewModelUserSettings>(datamesage[1]);
+
+                            int IdPlayer = remoteIPAddress.FindIndex(x => x.IPAddress == viewModelUserSettings.IPAddress && x.Port == viewModelUserSettings.Port);
+
+                            if (IdPlayer != -1)
+                            {
+                                int snakeId = remoteIPAddress[IdPlayer].IdSnake;
+                                var snake = viewModelGames.Find(x => x.IdSnake == snakeId).SnakesPlayers;
+
+                                // Обработка направлений
+                                switch (command)
+                                {
+                                    case "Up":
+                                        if (snake.direction != Snakes.Direction.Down) // Нельзя развернуться на 180°
+                                            snake.direction = Snakes.Direction.Up;
+                                        break;
+                                    case "Down":
+                                        if (snake.direction != Snakes.Direction.Up)
+                                            snake.direction = Snakes.Direction.Down;
+                                        break;
+                                    case "Left":
+                                        if (snake.direction != Snakes.Direction.Right)
+                                            snake.direction = Snakes.Direction.Left;
+                                        break;
+                                    case "Right":
+                                        if (snake.direction != Snakes.Direction.Left)
+                                            snake.direction = Snakes.Direction.Right;
+                                        break;
+                                }
+                                Console.ForegroundColor = ConsoleColor.Cyan;
+                                Console.WriteLine($"Игрок {viewModelUserSettings.Name} двигается: {snake.direction}");
+                            }
                         }
                     }
                 }
@@ -166,6 +195,11 @@ namespace Snake
                 {
                     // Находим змею игрока
                     Snakes Snake = Program.viewModelGames.Find(x => x.IdSnake == User.IdSnake).SnakesPlayers;
+
+                    // Если змея ещё не начала движение, пропускаем
+                    if (Snake.direction == Snakes.Direction.Start)
+                        continue;
+
                     // Проходим точки змеи через цикл от конца в начало
                     for (int i = Snake.Points.Count - 1; i >= 0; i--)
                     {
@@ -319,5 +353,5 @@ namespace Snake
             else
                 Leaders = new List<Leaders>();
         }
-    } 
+    }
 }

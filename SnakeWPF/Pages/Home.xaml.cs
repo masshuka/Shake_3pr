@@ -41,7 +41,7 @@ namespace SnakeWPF.Pages
             // IP адрес
             IPAddress UserIPAddress;
             // Если IP не преобразуется
-            if (!IPAddress.TryParse(ip.Text, out UserIPAddress))
+            if (!IPAddress.TryParse(Ip.Text, out UserIPAddress))
             {
                 // Выводим ошибку
                 MessageBox.Show("Please use the IP address in the format X.X.X.X.");
@@ -50,7 +50,7 @@ namespace SnakeWPF.Pages
             // Порт игрока
             int UserPort;
             // Если порт не преобразуется
-            if (!int.TryParse(port.Text, out UserPort))
+            if (!int.TryParse(Port.Text, out UserPort))
             {
                 // Выводим ошибку
                 MessageBox.Show("Please use the port as a number.");
@@ -59,9 +59,9 @@ namespace SnakeWPF.Pages
             // Запускаем потоки на прослушку
             MainWindow.mainWindow.StartReceiver();
             // Заполняем IP адрес игрока в модель
-            MainWindow.mainWindow.ViewModelUserSettings.IPAddress = ip.Text;
+            MainWindow.mainWindow.ViewModelUserSettings.IPAddress = Ip.Text;
             // Заполняем порт игрока в модель
-            MainWindow.mainWindow.ViewModelUserSettings.Port = port.Text;
+            MainWindow.mainWindow.ViewModelUserSettings.Port = Port.Text;
             // Заполняем имя игрока в модель
             MainWindow.mainWindow.ViewModelUserSettings.Name = name.Text;
             // Отправляем команду /start и сконвертированные данные в Json
