@@ -55,10 +55,23 @@ namespace Snake
                 IPEndPoint endPoint = new IPEndPoint(IPAddress.Parse(User.IPAddress), int.Parse(User.Port));
                 try
                 {
-                    byte[] bytes = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(viewModelGames.Find(x => x.IdSnake == User.IdSnake)));
-                    sender.Send(bytes, bytes.Length, endPoint);
+                    // Первое сообщение - твоя змейка
+                    var mySnake = viewModelGames.Find(x => x.IdSnake == User.IdSnake);
+                    if (mySnake != null)
+                    {
+                        byte[] bytes = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(mySnake));
+                        sender.Send(bytes, bytes.Length, endPoint);
+                    }
+
+                    // Второе сообщение - все остальные змейки (может быть пустым)
+                    var otherSnakes = viewModelGames.FindAll(x => x.IdSnake != User.IdSnake);
+                    // Всегда отправляем список, даже если он пустой
+                    byte[] otherBytes = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(otherSnakes));
+                    sender.Send(otherBytes, otherBytes.Length, endPoint);
+
                     Console.ForegroundColor = ConsoleColor.Yellow;
-                    Console.WriteLine($"Отправил данные пользователю: {User.IPAddress}:{User.Port}");
+                    Console.WriteLine($"Отправил данные пользователю: {User.IPAddress}:{User.Port} " +
+                                    $"(моя змейка: {mySnake != null}, другие: {otherSnakes.Count})");
                 }
                 catch (Exception ex)
                 {
@@ -167,6 +180,7 @@ namespace Snake
         /// <summary> Таймер с игрой (тут происходит перемещение змей и обработка столкновений ...)
         public static void Timer()
         {
+            
             while (true)
             {
                 // останавливаем на 100 миллисекунд
@@ -245,14 +259,17 @@ namespace Snake
 
                     // проверяем змею на столкновение с препятствием
                     // Если первая точка змеи вышла за координаты экрана по горизонтали
+                    // проверяем змею на столкновение с препятствием
                     if (Snake.Points[0].X <= 0 || Snake.Points[0].X >= 793)
                     {
-                        // Говорим что игра окончена
+                        Console.ForegroundColor = ConsoleColor.Red;
+                        Console.WriteLine($"Игрок {User.Name} врезался в стену по X: {Snake.Points[0].X}");
                         Snake.GameOver = true;
                     }
                     else if (Snake.Points[0].Y <= 0 || Snake.Points[0].Y >= 420)
                     {
-                        // Говорим что игра окончена
+                        Console.ForegroundColor = ConsoleColor.Red;
+                        Console.WriteLine($"Игрок {User.Name} врезался в стену по Y: {Snake.Points[0].Y}");
                         Snake.GameOver = true;
                     }
 
@@ -332,26 +349,78 @@ namespace Snake
 
         public static void SaveLeaders()
         {
-            string json = JsonConvert.SerializeObject(Leaders);
-            StreamWriter SM = new StreamWriter("./Leaders.txt");
-            SM.WriteLine(json);
-            SM.Close();
+            try
+            {
+                // Убедимся что директория существует
+                string directory = Path.GetDirectoryName("./leaders.txt");
+                if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
+                {
+                    Directory.CreateDirectory(directory);
+                }
+
+                string json = JsonConvert.SerializeObject(Leaders, Formatting.Indented);
+                File.WriteAllText("./leaders.txt", json);
+                Console.WriteLine($"Сохранено {Leaders.Count} записей в таблицу лидеров");
+            }
+            catch (Exception ex)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine("Ошибка сохранения таблицы лидеров: " + ex.Message);
+            }
         }
 
         public static void LoadLeaders()
         {
-            if (File.Exists("./leaders.txt"))
+            try
             {
-                StreamReader SR = new StreamReader("./leaders.txt");
-                string json = SR.ReadLine();
-                SR.Close();
-                if (!string.IsNullOrEmpty(json))
-                    Leaders = JsonConvert.DeserializeObject<List<Leaders>>(json);
+                if (File.Exists("./leaders.txt"))
+                {
+                    string json = File.ReadAllText("./leaders.txt");
+
+                    // Проверяем что файл не пустой и содержит валидный JSON
+                    if (!string.IsNullOrWhiteSpace(json) && json.Trim() != "[]")
+                    {
+                        Leaders = JsonConvert.DeserializeObject<List<Leaders>>(json);
+                        Console.WriteLine($"Загружено {Leaders.Count} записей из таблицы лидеров");
+                    }
+                    else
+                    {
+                        Leaders = new List<Leaders>();
+                        Console.WriteLine("Файл leaders.txt пустой, создан новый список лидеров");
+                    }
+                }
                 else
+                {
                     Leaders = new List<Leaders>();
+                    Console.WriteLine("Файл leaders.txt не существует, создан новый список лидеров");
+                }
             }
-            else
+            catch (JsonSerializationException jsonEx)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine($"Ошибка загрузки таблицы лидеров (неверный формат JSON): {jsonEx.Message}");
                 Leaders = new List<Leaders>();
+
+                // Создаем backup поврежденного файла
+                try
+                {
+                    if (File.Exists("./leaders.txt"))
+                    {
+                        File.Move("./leaders.txt", "./leaders_corrupted_backup.txt");
+                        Console.WriteLine("Создан backup поврежденного файла: leaders_corrupted_backup.txt");
+                    }
+                }
+                catch (Exception backupEx)
+                {
+                    Console.WriteLine($"Не удалось создать backup: {backupEx.Message}");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine($"Ошибка загрузки таблицы лидеров: {ex.Message}");
+                Leaders = new List<Leaders>();
+            }
         }
     }
 }

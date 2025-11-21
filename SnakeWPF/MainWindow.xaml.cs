@@ -118,42 +118,64 @@ namespace SnakeWPF
                 {
                     // Ожидание дейтаграммы
                     byte[] receiveBytes = receivingUdpClient.Receive(ref RemoteIPEndPoint);
-
-                    // Преобразуем и отображаем данные
                     string returnData = Encoding.UTF8.GetString(receiveBytes);
-                    // Если у нас не существует данных от сервера (значит мы только начали игру и нам необходимо сменить экран)
+
+                    // Если у нас не существует данных от сервера (значит мы только начали игру)
                     if (ViewModelGames == null)
                     {
-                        // Говорим что выполняем вне потока
                         Dispatcher.Invoke(() =>
                         {
-                            // Открываем окно с игрой
                             OpenPage(Game);
                         });
                     }
-                    // Конвертируем данные в модель
-                    ViewModelGames = JsonConvert.DeserializeObject<ViewModelGames>(returnData.ToString());
-                    // Если игрок проиграл
-                    if (ViewModelGames.SnakesPlayers.GameOver)
+
+                    try
                     {
-                        // Выполняем вне потока
-                        Dispatcher.Invoke(() =>
+                        // Первое сообщение - твоя змейка
+                        ViewModelGames = JsonConvert.DeserializeObject<ViewModelGames>(returnData);
+
+                        // Второе сообщение - все остальные змейки
+                        receiveBytes = receivingUdpClient.Receive(ref RemoteIPEndPoint);
+                        returnData = Encoding.UTF8.GetString(receiveBytes);
+
+                        List<ViewModelGames> otherSnakes = new List<ViewModelGames>();
+                        if (!string.IsNullOrEmpty(returnData) && returnData != "[]")
                         {
-                            // Открываем окно с окончанием игры
-                            OpenPage(new Pages.EndGame());
-                        });
+                            otherSnakes = JsonConvert.DeserializeObject<List<ViewModelGames>>(returnData);
+                        }
+
+                        // Сохраняем все змейки для отрисовки
+                        Game.AllSnakes = otherSnakes;
+                        Game.MySnake = ViewModelGames;
+
+                        // Если игрок проиграл
+                        if (ViewModelGames.SnakesPlayers.GameOver)
+                        {
+                            Dispatcher.Invoke(() =>
+                            {
+                                OpenPage(new Pages.EndGame());
+                            });
+                        }
+                        else
+                        {
+                            // Вызываем создание UI
+                            Game.CreateUI();
+                        }
                     }
-                    else
+                    catch (JsonSerializationException jsonEx)
                     {
-                        // Вызываем создание UI
-                        Game.CreateUI();
+                        Debug.WriteLine($"Ошибка десериализации JSON: {jsonEx.Message}");
+                        Debug.WriteLine($"Данные: {returnData}");
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.WriteLine($"Ошибка обработки данных: {ex.Message}");
                     }
                 }
             }
             catch (Exception ex)
             {
-                // если что-то пошло не по плану, выводим ошибку в консоль проекта
-                Debug.WriteLine("Возникло исключение: " + ex.ToString() + "\n " + ex.Message);
+                Debug.WriteLine("Возникло исключение в Receiver: " + ex.ToString() + "\n " + ex.Message);
             }
         }
 
